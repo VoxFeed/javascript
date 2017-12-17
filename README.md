@@ -259,7 +259,7 @@ Other Style Guides
     ```
 
   <a name="objects--quoted-props"></a><a name="3.8"></a>
-  - [3.6](#objects--quoted-props) Only quote properties that are invalid identifiers. eslint: [`quote-props`](http://eslint.org/docs/rules/quote-props.html) jscs: [`disallowQuotedKeysInObjects`](http://jscs.info/rule/disallowQuotedKeysInObjects)
+  - [3.6](#objects--quoted-props) Only quote properties that are invalid identifiers, and group them at the end. eslint: [`quote-props`](http://eslint.org/docs/rules/quote-props.html) jscs: [`disallowQuotedKeysInObjects`](http://jscs.info/rule/disallowQuotedKeysInObjects)
 
     > Why? In general we consider it subjectively easier to read. It improves syntax highlighting, and is also more easily optimized by many JS engines.
 
@@ -267,7 +267,16 @@ Other Style Guides
     // bad
     const bad = {
       'foo': 3,
+      'data-blah-blah': 5,
       'bar': 4,
+      'data-blah': 5,
+    };
+
+    // bad
+    const bad = {
+      foo: 3,
+      'data-blah-blah': 5,
+      bar: 4,
       'data-blah': 5,
     };
 
@@ -276,6 +285,7 @@ Other Style Guides
       foo: 3,
       bar: 4,
       'data-blah': 5,
+      'data-blah-blah': 5,
     };
     ```
 
@@ -631,25 +641,43 @@ Other Style Guides
 ## Functions
 
   <a name="functions--declarations"></a><a name="7.1"></a>
-  - [7.1](#functions--declarations) Use named function expressions instead of function declarations. eslint: [`func-style`](http://eslint.org/docs/rules/func-style) jscs: [`disallowFunctionDeclarations`](http://jscs.info/rule/disallowFunctionDeclarations)
+  - [7.1](#functions--declarations) Use function declarations for first level functions and named function expressions for any child function within them.
 
-    > Why? Function declarations are hoisted, which means that it’s easy - too easy - to reference the function before it is defined in the file. This harms readability and maintainability. If you find that a function’s definition is large or complex enough that it is interfering with understanding the rest of the file, then perhaps it’s time to extract it to its own module! Don’t forget to name the expression - anonymous functions can make it harder to locate the problem in an Error’s call stack. ([Discussion](https://github.com/airbnb/javascript/issues/794))
+    > In order to prevent references to non-declared functions try to take advantege from closures:
 
     ```javascript
     // bad
-    function foo() {
+    function fistStep() {
+      function doSomething() {
+       // ...
+      }
+    }
+
+    function secondStep() {
       // ...
     }
 
     // bad
-    const foo = function () {
+    const fistStep = function () {
+      // ...
+    };
+
+    const secondStep = function () {
       // ...
     };
 
     // good
-    const foo = function bar() {
-      // ...
-    };
+    function myUseCase() {
+      const execute = () => {
+        fistStep();
+        secondStep();
+      };
+
+      const firstStep = () => {}
+      const secondStep = () => {}
+
+      execute();
+    }
     ```
 
   <a name="functions--iife"></a><a name="7.2"></a>
@@ -2542,7 +2570,7 @@ Other Style Guides
     const story = [
       once,
       upon,
-      aTime,
+      aTime
     ];
 
     // bad
@@ -2558,106 +2586,9 @@ Other Style Guides
       firstName: 'Ada',
       lastName: 'Lovelace',
       birthYear: 1815,
-      superPower: 'computers',
+      superPower: 'computers'
     };
     ```
-
-  <a name="commas--dangling"></a><a name="19.2"></a>
-  - [20.2](#commas--dangling) Additional trailing comma: **Yup.** eslint: [`comma-dangle`](http://eslint.org/docs/rules/comma-dangle.html) jscs: [`requireTrailingComma`](http://jscs.info/rule/requireTrailingComma)
-
-    > Why? This leads to cleaner git diffs. Also, transpilers like Babel will remove the additional trailing comma in the transpiled code which means you don’t have to worry about the [trailing comma problem](https://github.com/airbnb/javascript/blob/es5-deprecated/es5/README.md#commas) in legacy browsers.
-
-    ```diff
-    // bad - git diff without trailing comma
-    const hero = {
-         firstName: 'Florence',
-    -    lastName: 'Nightingale'
-    +    lastName: 'Nightingale',
-    +    inventorOf: ['coxcomb chart', 'modern nursing']
-    };
-
-    // good - git diff with trailing comma
-    const hero = {
-         firstName: 'Florence',
-         lastName: 'Nightingale',
-    +    inventorOf: ['coxcomb chart', 'modern nursing'],
-    };
-    ```
-
-    ```javascript
-    // bad
-    const hero = {
-      firstName: 'Dana',
-      lastName: 'Scully'
-    };
-
-    const heroes = [
-      'Batman',
-      'Superman'
-    ];
-
-    // good
-    const hero = {
-      firstName: 'Dana',
-      lastName: 'Scully',
-    };
-
-    const heroes = [
-      'Batman',
-      'Superman',
-    ];
-
-    // bad
-    function createHero(
-      firstName,
-      lastName,
-      inventorOf
-    ) {
-      // does nothing
-    }
-
-    // good
-    function createHero(
-      firstName,
-      lastName,
-      inventorOf,
-    ) {
-      // does nothing
-    }
-
-    // good (note that a comma must not appear after a "rest" element)
-    function createHero(
-      firstName,
-      lastName,
-      inventorOf,
-      ...heroArgs
-    ) {
-      // does nothing
-    }
-
-    // bad
-    createHero(
-      firstName,
-      lastName,
-      inventorOf
-    );
-
-    // good
-    createHero(
-      firstName,
-      lastName,
-      inventorOf,
-    );
-
-    // good (note that a comma must not appear after a "rest" element)
-    createHero(
-      firstName,
-      lastName,
-      inventorOf,
-      ...heroArgs
-    );
-    ```
-
 **[⬆ back to top](#table-of-contents)**
 
 ## Semicolons
@@ -2873,45 +2804,8 @@ Other Style Guides
       };
     }
     ```
-
-  <a name="naming--filename-matches-export"></a><a name="22.6"></a>
-  - [23.6](#naming--filename-matches-export) A base filename should exactly match the name of its default export.
-
-    ```javascript
-    // file 1 contents
-    class CheckBox {
-      // ...
-    }
-    export default CheckBox;
-
-    // file 2 contents
-    export default function fortyTwo() { return 42; }
-
-    // file 3 contents
-    export default function insideDirectory() {}
-
-    // in some other file
-    // bad
-    import CheckBox from './checkBox'; // PascalCase import/export, camelCase filename
-    import FortyTwo from './FortyTwo'; // PascalCase import/filename, camelCase export
-    import InsideDirectory from './InsideDirectory'; // PascalCase import/filename, camelCase export
-
-    // bad
-    import CheckBox from './check_box'; // PascalCase import/export, snake_case filename
-    import forty_two from './forty_two'; // snake_case import/filename, camelCase export
-    import inside_directory from './inside_directory'; // snake_case import, camelCase export
-    import index from './inside_directory/index'; // requiring the index file explicitly
-    import insideDirectory from './insideDirectory/index'; // requiring the index file explicitly
-
-    // good
-    import CheckBox from './CheckBox'; // PascalCase export/import/filename
-    import fortyTwo from './fortyTwo'; // camelCase export/import/filename
-    import insideDirectory from './insideDirectory'; // camelCase export/import/directory name/implicit "index"
-    // ^ supports both insideDirectory.js and insideDirectory/index.js
-    ```
-
   <a name="naming--camelCase-default-export"></a><a name="22.7"></a>
-  - [23.7](#naming--camelCase-default-export) Use camelCase when you export-default a function. Your filename should be identical to your function’s name.
+  - [23.6](#naming--camelCase-default-export) Use camelCase when you export-default a function. Your filename should be identical to your function’s name.
 
     ```javascript
     function makeStyleGuide() {
@@ -2922,7 +2816,7 @@ Other Style Guides
     ```
 
   <a name="naming--PascalCase-singleton"></a><a name="22.8"></a>
-  - [23.8](#naming--PascalCase-singleton) Use PascalCase when you export a constructor / class / singleton / function library / bare object.
+  - [23.7](#naming--PascalCase-singleton) Use PascalCase when you export a constructor / class / singleton / function library / bare object.
 
     ```javascript
     const AirbnbStyleGuide = {
@@ -2934,7 +2828,7 @@ Other Style Guides
     ```
 
   <a name="naming--Acronyms-and-Initialisms"></a>
-  - [23.9](#naming--Acronyms-and-Initialisms) Acronyms and initialisms should always be all capitalized, or all lowercased.
+  - [23.8](#naming--Acronyms-and-Initialisms) Acronyms and initialisms should always be all capitalized, or all lowercased.
 
     > Why? Names are for readability, not to appease a computer algorithm.
 
